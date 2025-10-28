@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login - Cinemax</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Audiowide&display=swap" rel="stylesheet">
+  <style>
+    .cinema-logo-text { font-family: "Audiowide", sans-serif; font-size: 36px; letter-spacing: 3px; background: linear-gradient(90deg,#ffca28,#f06292); -webkit-background-clip:text; -webkit-text-fill-color:transparent; text-shadow:0 0 18px rgba(255,202,40,.4) }
+    .bg { background: linear-gradient(rgba(13,13,13,.9), rgba(13,13,13,.95)), url('http://static.photos/cinema/1200x630/5') center/cover no-repeat; }
+    .form-input { background:#1b1b1b; border:1px solid #333; }
+    .form-input:focus { border-color:#8e44ad; box-shadow:0 0 0 3px rgba(142,68,173,.2) }
+    .btn-primary { background:linear-gradient(135deg,#8e44ad 0%,#9b59b6 100%) }
+    .btn-primary:hover { filter:brightness(1.05) }
+  </style>
+</head>
+<body class="bg text-white min-h-screen flex items-center justify-center">
+  <div class="max-w-md w-full bg-[#1b1b1b] rounded-2xl shadow-2xl p-8 m-4">
+    <div class="text-center mb-6">
+      <div class="cinema-logo-text">CINEMAX ADMIN</div>
+      <p class="text-gray-400">Sign in to admin dashboard</p>
+    </div>
+    <form id="adminLoginForm" class="space-y-5">
+      <div id="errorMessage" class="hidden text-sm text-red-400 bg-red-900/20 border border-red-500/30 rounded-lg p-3"></div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-2">Email</label>
+        <input id="email" type="email" required class="form-input w-full px-4 py-3 rounded-lg focus:outline-none" />
+      </div>
+      <div>
+        <label class="block text-sm text-gray-300 mb-2">Password</label>
+        <input id="password" type="password" required class="form-input w-full px-4 py-3 rounded-lg focus:outline-none" />
+      </div>
+      <button id="submitBtn" class="btn-primary w-full py-3 px-4 rounded-lg font-semibold">Sign In</button>
+    </form>
+    <div id="msg" class="text-sm text-center mt-4"></div>
+    <div class="mt-6 text-center">
+      <p class="text-gray-400">Don't have an admin account? <a href="admin-signup.html" class="text-[#ff3d00] font-semibold hover:text-[#ff5722]">Sign up</a></p>
+      <div class="mt-2">
+        <a href="/auth/login.html" class="text-yellow-300 text-sm">User login</a>
+      </div>
+    </div>
+  </div>
+  <script>
+    const API = 'http://localhost:3000/api';
+    const errorDiv = document.getElementById('errorMessage');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    function showError(message) {
+      errorDiv.textContent = message;
+      errorDiv.classList.remove('hidden');
+    }
+    
+    function hideError() {
+      errorDiv.classList.add('hidden');
+    }
+    
+    document.getElementById('adminLoginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      hideError();
+      
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const msg = document.getElementById('msg');
+      msg.textContent = '';
+      
+      if (!email || !password) {
+        showError('Email and password are required');
+        return;
+      }
+      
+      // Disable button during submission
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Signing In...';
+      
+      try{
+        const res = await fetch(`${API}/auth/admin/login`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ email, password }) });
+        const data = await res.json();
+        
+        if(!res.ok){ 
+          showError(data.error || 'Login failed');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Sign In';
+          return; 
+        }
+        
+        msg.textContent = 'Login successful! Redirecting...';
+        msg.className = 'text-green-400 text-center mt-4';
+        
+        setTimeout(() => {
+          const redirect = new URLSearchParams(location.search).get('redirect') || '/admin';
+          location.href = redirect;
+        }, 500);
+      }catch(err){ 
+        showError('Login failed: ' + err.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>

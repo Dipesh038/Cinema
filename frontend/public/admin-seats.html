@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cinema Seat Management</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <style>
+    body { padding: 20px; }
+    .page { max-width: 1200px; margin: 0 auto; }
+    .header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;
+    }
+    .header-title { font-family: 'Audiowide', cursive; color: var(--accent); letter-spacing: 1px; }
+    .card { background: var(--light-bg); border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .btn { background: var(--primary); color: var(--text); border: 1px solid #333; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; transition: filter .2s; }
+    .btn:hover { filter: brightness(1.2); }
+    select, input { background: #111; color: var(--text); border: 1px solid #333; padding: 10px; border-radius: 8px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(42px,1fr)); gap: 8px; }
+    .seat { position: relative; }
+    .seat .tag { position: absolute; top: -8px; right: -8px; font-size: 10px; color: var(--accent); }
+    .legend { display: flex; gap: 16px; color: #ccc; font-size: 14px; margin-bottom: 8px; }
+    .legend .box { width: 16px; height: 16px; display: inline-block; border-radius: 4px; border: 1px solid #444; margin-right: 6px; }
+    .box.available { background: var(--light-bg); }
+    .box.booked { background: #333; }
+    .box.selected { background: var(--primary); border-color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <h1 class="header-title">🎬 Cinema Seat Management</h1>
+      <a href="/admin" class="btn"><i class="fas fa-arrow-left"></i> Back to Admin</a>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <label for="movieSelect">Select Movie</label>
+        <select id="movieSelect"></select>
+        <button id="refreshSeats" class="btn"><i class="fas fa-rotate"></i> Refresh</button>
+        <button id="resetSeats" class="btn" title="Set all seats to available"><i class="fas fa-broom"></i> Reset All</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="legend">
+        <span><span class="box available"></span> Available</span>
+        <span><span class="box booked"></span> Booked</span>
+        <span><span class="box selected"></span> Selected</span>
+      </div>
+      <div id="seatGrid" class="grid"></div>
+      <div class="row" style="margin-top: 12px;">
+        <button id="markAvailable" class="btn">Mark Available</button>
+        <button id="markBooked" class="btn">Mark Booked</button>
+        <div style="flex:1"></div>
+        <input id="addRowsInput" placeholder="Add rows e.g. H-J,12" style="width: 220px;">
+        <button id="addRowsBtn" class="btn"><i class="fas fa-plus"></i> Add Rows</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/src/admin-seats.js"></script>
+</body>
+</html>

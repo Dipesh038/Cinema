@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - CineVerse Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Audiowide&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#8e44ad',
+                        secondary: '#ffca28',
+                        dark: {
+                            100: '#1b1b1b',
+                            200: '#0d0d0d',
+                            300: '#111111',
+                            400: '#222222',
+                            500: '#333333'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .cinema-logo-text {
+            font-family: "Audiowide", sans-serif;
+            font-size: 42px;
+            letter-spacing: 4px;
+            background: linear-gradient(90deg, #ffca28, #f06292);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0px 0px 20px rgba(255, 200, 120, 0.6);
+        }
+        
+        .signup-bg {
+            background: linear-gradient(rgba(13, 13, 13, 0.9), rgba(13, 13, 13, 0.95)), url('http://static.photos/cinema/1200x630/3');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .form-input {
+            background-color: #1b1b1b;
+            border: 1px solid #333333;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            border-color: #8e44ad;
+            box-shadow: 0 0 0 3px rgba(142, 68, 173, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #ffca28 0%, #f06292 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #f06292 0%, #ffca28 100%);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-dark-200 text-white font-['Poppins'] min-h-screen flex items-center justify-center signup-bg">
+    <div class="max-w-md w-full bg-dark-100 rounded-2xl shadow-2xl p-8 m-4">
+        <div class="text-center mb-8">
+            <div class="cinema-logo-text text-center mb-2">CINEMA PRO</div>
+            <p class="text-gray-400">Create a new account</p>
+        </div>
+        
+        <form id="signupForm" class="space-y-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                <input type="text" id="name" name="name" required class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+            </div>
+            
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                <input type="email" id="email" name="email" required class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+            </div>
+            
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                <input type="password" id="password" name="password" required class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+            </div>
+            
+            <div>
+                <label for="confirm-password" class="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                <input type="password" id="confirm-password" name="confirm-password" required class="form-input w-full px-4 py-3 rounded-lg focus:outline-none">
+            </div>
+            
+            <div class="flex items-center">
+                <input id="terms" name="terms" type="checkbox" required class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                <label for="terms" class="ml-2 block text-sm text-gray-300">I agree to the <a href="#" class="text-secondary hover:text-yellow-300">Terms and Conditions</a></label>
+            </div>
+            
+            <div>
+                <button type="submit" class="btn-primary w-full py-3 px-4 rounded-lg font-semibold text-white shadow-lg">Sign Up</button>
+            </div>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <p class="text-gray-400">Already have an account? <a href="login.html" class="text-secondary font-semibold hover:text-yellow-300">Sign in</a></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            feather.replace();
+            const API = 'http://localhost:3000/api';
+            document.getElementById('signupForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const name = document.getElementById('name').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                if (!name || !email || !password) { alert('All fields are required'); return; }
+                if (password !== confirmPassword) { alert('Passwords do not match!'); return; }
+                try{
+                    const res = await fetch(`${API}/auth/signup`, { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify({ name, email, password }) });
+                    const data = await res.json();
+                    if(!res.ok){ alert(data.error||'Signup failed'); return; }
+                    alert('Signup successful. Please login.');
+                    window.location.href = '/auth/login.html';
+                }catch(err){ alert('Signup failed: '+ err.message); }
+            });
+        });
+    </script>
+</body>
+</html>

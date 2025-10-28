@@ -1,0 +1,31 @@
+{
+  "name": "movie-booking-system",
+  "version": "1.0.0",
+  "description": "A modern movie booking system with seat selection and admin panel",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install-all": "npm install && cd backend && npm install",
+    "setup": "npm run install-all && echo 'Setup complete! Run npm start to begin.'"
+  },
+  "keywords": [
+    "movie",
+    "booking",
+    "cinema",
+    "seat-selection",
+    "nodejs",
+    "express",
+    "mysql"
+  ],
+  "author": "Dipesh Kunwar",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Dipesh038/movie-booking-system"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
+}

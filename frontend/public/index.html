@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modern Movie Seat Booking</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
+  
+  <!-- Add to your HTML head -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- QR + Screenshot Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+</head>
+
+<body>
+  <div id="pageTransition" class="page-transition-overlay"></div>
+
+  <!-- 🎥 Movie Header with Logo and Poster -->
+  <header class="movie-header">
+    <div class="cinema-logo-text">CINEMA</div>
+  </header>
+
+  <!-- Navigation & Date Selection -->
+  <div class="navbar">
+    <div class="date-selector">
+      <div class="date-nav">
+        <button id="prevDate" class="date-nav-btn"><i class="fas fa-chevron-left"></i></button>
+        <div class="dates-container" id="datesContainer">
+          <!-- Dynamic dates will be inserted here by JavaScript -->
+        </div>
+        <button id="nextDate" class="date-nav-btn"><i class="fas fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <div class="showtimes">
+      <div class="time" data-time="08:55">08:55 AM</div>
+      <div class="time" data-time="09:55">09:55 AM</div>
+      <div class="time selected" data-time="12:45">12:45 PM</div>
+      <div class="time" data-time="15:55">03:55 PM</div>
+      <div class="time" data-time="18:55">06:55 PM</div>
+    </div>
+  </div>
+
+  <!-- 🎬 Movie Selection Section -->
+  <section id="movie-list" class="movie-list">
+    <h2>🎬 Available Movies</h2>
+    <div id="moviesContainer" class="movies-container">
+      <!-- Movie cards will be inserted here by JavaScript -->
+      <!-- No movies available message -->
+      <div id="noMoviesMessage" class="no-movies-message">
+        <h3>🎬 Movies are not available on this date</h3>
+        <p>No movies are scheduled for the selected date and time.</p>
+        <p class="suggestion">Please try selecting a different date or time to see available movies.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 🪑 Booking Area (Initially Hidden) -->
+  <main class="booking-area" id="bookingSection">
+    <div class="screen-container">
+      <div class="screen"></div>
+      <p>SCREEN THIS WAY</p>
+    </div>
+
+    <div class="legend">
+      <span><span class="box available"></span> Available</span>
+      <span><span class="box selected"></span> Selected</span>
+      <span><span class="box occupied"></span> Occupied</span>
+    </div>
+
+    <section class="seat-category">
+      <h3>CLASSIC - ₹381.36</h3>
+      <div class="seat-group" id="classic">
+        <!-- Classic seats will be inserted here by JavaScript -->
+      </div>
+    </section>
+
+    <section class="seat-category">
+      <h3>PRIME - ₹481.36</h3>
+      <div class="seat-group" id="prime">
+        <!-- Prime seats will be inserted here by JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  <!-- 💰 Booking Summary Footer (Initially Hidden) -->
+  <footer class="summary" id="summarySection">
+    <div class="summary-info">
+      <p><span id="selectedCount">0</span> seat(s) selected</p>
+      <p>Total: ₹<span id="totalPrice">0.00</span></p>
+    </div>
+    <button id="bookBtn" class="book-button">Book Now</button>
+  </footer>
+
+  <!-- 🎫 Booking Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal ticket-style" id="ticketContainer">
+      <div class="ticket-header">
+        <div class="cinema-logo-text">CINEMA</div>
+        <span>Premium Theaters</span>
+      </div>
+
+      <div class="ticket-body">
+        <img src="https://image.tmdb.org/t/p/w500/8YFL5QQVPy3AgrEQxNYVSgiPEbe.jpg" alt="Movie Poster" class="ticket-poster" id="ticketPoster">
+        <div class="ticket-info">
+          <h2 id="ticketMovieTitle">Movie Title</h2>
+          <p><strong>Date:</strong> <span id="ticketDate">10 Oct, Friday</span></p>
+          <p><strong>Time:</strong> <span id="ticketTime">12:45 PM</span></p>
+          <p><strong>Seats:</strong> <span id="seatListText">None selected</span></p>
+          <p><strong>Total:</strong> ₹<span id="ticketTotal">0.00</span></p>
+        </div>
+      </div>
+
+      <div id="qrcode" class="qr-code"></div>
+      <div class="barcode"></div>
+
+      <div class="ticket-actions">
+        <button id="downloadTicket" class="download-btn">Download Ticket</button>
+        <button id="closeModal" class="close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+  
+      <footer class="footer">
+      <div class="footer-top">
+        <h2 class="logo">Cinemax</h2>
+        <div class="socials">
+          <a href="https://www.instagram.com/dipesh_3643/" target="_blank" class="social-icon"
+            ><i class="fab fa-instagram"></i
+          ></a>
+          <a href="https://www.linkedin.com/feed/" target="_blank" class="social-icon"
+            ><i class="fab fa-linkedin"></i
+          ></a>
+          <a href="https://github.com/Dipesh038" target="_blank" class="social-icon"
+            ><i class="fab fa-github"></i
+          ></a>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2025 Cinemax. All rights reserved.</p>
+
+      </div>
+    </footer>
+
+  <!-- Script -->
+  <script src="/src/script.js?v=2"></script>
+</body>
+
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Seat Selection - Cinema Booking</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- QR + Screenshot Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+</head>
+
+<body>
+  <div id="pageTransition" class="page-transition-overlay"></div>
+
+  <!-- 🎥 Movie Header with Selected Movie Info -->
+  <header class="movie-header">
+    <div class="cinema-logo-text">CINEMA</div>
+    <div class="selected-movie-info" id="selectedMovieInfo">
+      <img id="moviePosterHeader" src="" alt="Movie Poster" class="header-poster">
+      <div class="movie-details-header">
+        <h1 id="movieTitleHeader">Loading...</h1>
+        <p id="movieInfoHeader">Please wait...</p>
+        <p class="show-details" id="showDetailsHeader">
+          <span id="selectedDateHeader"></span> | <span id="selectedTimeHeader"></span>
+        </p>
+      </div>
+    </div>
+    <button class="back-to-movies-btn" id="backToMovies">
+      <i class="fas fa-arrow-left"></i> Back to Movies
+    </button>
+  </header>
+
+  <!-- 🪑 Booking Area -->
+  <main class="booking-area visible" id="bookingSection">
+    <div class="screen-container">
+      <div class="screen"></div>
+      <p>SCREEN THIS WAY</p>
+    </div>
+
+    <div class="legend">
+      <span><span class="box available"></span> Available</span>
+      <span><span class="box selected"></span> Selected</span>
+      <span><span class="box occupied"></span> Occupied</span>
+    </div>
+
+    <section class="seat-category">
+      <h3>CLASSIC - ₹<span id="classicPriceDisplay">381.36</span></h3>
+      <div class="seat-group" id="classic">
+        <!-- Classic seats will be inserted here by JavaScript -->
+      </div>
+    </section>
+
+    <section class="seat-category">
+      <h3>PRIME - ₹<span id="primePriceDisplay">481.36</span></h3>
+      <div class="seat-group" id="prime">
+        <!-- Prime seats will be inserted here by JavaScript -->
+      </div>
+    </section>
+  </main>
+
+  <!-- 💰 Booking Summary Footer -->
+  <footer class="summary visible" id="summarySection">
+    <div class="summary-info">
+      <p><span id="selectedCount">0</span> seat(s) selected</p>
+      <p>Total: ₹<span id="totalPrice">0.00</span></p>
+    </div>
+    <button id="bookBtn" class="book-button">Book Now</button>
+  </footer>
+
+  <!-- 🎫 Booking Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal ticket-style" id="ticketContainer">
+      <div class="ticket-header">
+        <div class="cinema-logo-text">CINEMA</div>
+        <span>Premium Theaters</span>
+      </div>
+
+      <div class="ticket-body">
+        <img src="" alt="Movie Poster" class="ticket-poster" id="ticketPoster">
+        <div class="ticket-info">
+          <h2 id="ticketMovieTitle">Movie Title</h2>
+          <p><strong>Date:</strong> <span id="ticketDate">-</span></p>
+          <p><strong>Time:</strong> <span id="ticketTime">-</span></p>
+          <p><strong>Seats:</strong> <span id="seatListText">None selected</span></p>
+          <p><strong>Total:</strong> ₹<span id="ticketTotal">0.00</span></p>
+          <p><strong>Booking ID:</strong> <span id="ticketBookingId">-</span></p>
+        </div>
+      </div>
+
+      <div id="qrcode" class="qr-code"></div>
+      <div class="barcode"></div>
+
+      <div class="ticket-actions">
+        <button id="downloadTicket" class="download-btn">Download Ticket</button>
+        <button id="closeModal" class="close-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script -->
+  <script src="/src/seat-script.js"></script>
+</body>
+
+</html>
