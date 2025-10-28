@@ -35,16 +35,14 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // 🎟️ Constants
-    const PRICES = {
-        CLASSIC: parseFloat(localStorage.getItem('classicPrice')) || 381.36,
-        PRIME: parseFloat(localStorage.getItem('primePrice')) || 481.36
+    let PRICES = {
+        CLASSIC: 381.36, // Will be updated from movie data
+        PRIME: 481.36    // Will be updated from movie data
     };
 
     const API_URL = 'http://localhost:3000/api';
     
-    // Display prices in the UI
-    if (elements.classicPriceDisplay) elements.classicPriceDisplay.textContent = PRICES.CLASSIC.toFixed(2);
-    if (elements.primePriceDisplay) elements.primePriceDisplay.textContent = PRICES.PRIME.toFixed(2);
+    // Price displays will be updated after fetching movie data
 
     // ===== APPLICATION STATE =====
     let selectedMovie = null;
@@ -76,7 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     title: selectedShow.movie_title,
                     language: selectedShow.language || 'English',
                     format: selectedShow.format || '2D',
-                    picture: selectedShow.picture
+                    picture: selectedShow.picture,
+                    classic_price: selectedShow.classic_price || 381.36,
+                    prime_price: selectedShow.prime_price || 481.36
                 };
                 selectedDate = selectedDate || selectedShow.show_date;
                 selectedTime = selectedTime || selectedShow.show_time;
@@ -184,6 +184,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // 🎬 Display Movie Information
     function displayMovieInfo() {
         if (!selectedMovie) return;
+        
+        // Update prices from movie data
+        if (selectedMovie.classic_price !== undefined) {
+            PRICES.CLASSIC = parseFloat(selectedMovie.classic_price);
+        }
+        if (selectedMovie.prime_price !== undefined) {
+            PRICES.PRIME = parseFloat(selectedMovie.prime_price);
+        }
+        
+        // Update price displays
+        if (elements.classicPriceDisplay) elements.classicPriceDisplay.textContent = PRICES.CLASSIC.toFixed(2);
+        if (elements.primePriceDisplay) elements.primePriceDisplay.textContent = PRICES.PRIME.toFixed(2);
         
         // Update header
         if (elements.moviePosterHeader) {

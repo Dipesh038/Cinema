@@ -228,6 +228,19 @@ async function initializeSchema(conn) {
     `);
 
     // --- Lightweight migrations for existing databases ---
+    // Ensure movies.classic_price and prime_price exist for per-movie pricing
+    try {
+        const classicPriceCheck = await queryAsync(conn, `
+            SELECT COUNT(*) AS cnt
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'movies' AND COLUMN_NAME = 'classic_price'
+        `, [dbConfig.database]);
+        if (!classicPriceCheck[0] || Number(classicPriceCheck[0].cnt) === 0) {
+            await queryAsync(conn, `ALTER TABLE movies ADD COLUMN classic_price DECIMAL(10,2) DEFAULT 381.36 AFTER price`);
+            await queryAsync(conn, `ALTER TABLE movies ADD COLUMN prime_price DECIMAL(10,2) DEFAULT 481.36 AFTER classic_price`);
+        }
+    } catch (e) { console.error('Migration classic_price/prime_price failed:', e); }
+
     // Ensure bookings.show_id exists and has FK, for older schemas created before shows were introduced
     try {
         const colCheck = await queryAsync(conn, `
@@ -354,6 +367,8 @@ app.get('/api/movies', (req, res) => {
             language: movie.language,
             format: movie.format,
             price: parseFloat(movie.price),
+            classic_price: movie.classic_price !== undefined ? parseFloat(movie.classic_price) : 381.36,
+            prime_price: movie.prime_price !== undefined ? parseFloat(movie.prime_price) : 481.36,
             picture: movie.picture,
             is_active: movie.is_active
         }));
@@ -474,11 +489,15 @@ app.post('/api/auth/reset', async (req,res)=>{
 
 // Add new movie
 app.post('/api/movies', (req, res) => {
-    const { title, show_date, show_time, language = 'English', format = '2D', price, picture } = req.body;
+    const { title, show_date, show_time, language = 'English', format = '2D', price, picture, classic_price, prime_price } = req.body;
     
     if (!title || !show_date || !show_time || price === undefined) {
         return res.status(400).json({ error: 'Missing required fields: title, show_date, show_time, and price are required' });
     }
+    
+    // Default prices if not provided
+    const classicPriceValue = classic_price !== undefined ? classic_price : 381.36;
+    const primePriceValue = prime_price !== undefined ? prime_price : 481.36;
     
     // Truncate picture URL if too long (max 255 chars for database)
     const truncatedPicture = picture && picture.length > 255 ? picture.substring(0, 252) + '...' : picture;
@@ -492,16 +511,16 @@ app.post('/api/movies', (req, res) => {
     
     // First try: insert into schemas that have a 'name' column (legacy DBs)
     const insertWithName = `
-        INSERT INTO movies (title, name, language, format, price, picture, show_time, show_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO movies (title, name, language, format, price, classic_price, prime_price, picture, show_time, show_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const valuesWithName = [title, title, language, format, price, truncatedPicture || 'https://via.placeholder.com/300x400', show_time, adjustedDate];
+    const valuesWithName = [title, title, language, format, price, classicPriceValue, primePriceValue, truncatedPicture || 'https://via.placeholder.com/300x400', show_time, adjustedDate];
 
     const insertWithoutName = `
-        INSERT INTO movies (title, language, format, price, picture, show_time, show_date)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO movies (title, language, format, price, classic_price, prime_price, picture, show_time, show_date)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    const valuesWithoutName = [title, language, format, price, truncatedPicture || 'https://via.placeholder.com/300x400', show_time, adjustedDate];
+    const valuesWithoutName = [title, language, format, price, classicPriceValue, primePriceValue, truncatedPicture || 'https://via.placeholder.com/300x400', show_time, adjustedDate];
 
     pool.query(insertWithName, valuesWithName, async (err, result) => {
         if (err) {
@@ -556,13 +575,13 @@ function generateDefaultSeats(movieId, config) {
 // Update movie
 app.put('/api/movies/:id', (req, res) => {
     const movieId = req.params.id;
-    const { title, show_date, show_time, language, format, price, picture } = req.body;
+    const { title, show_date, show_time, language, format, price, picture, classic_price, prime_price } = req.body;
     const query = `
         UPDATE movies
-        SET title = ?, language = ?, format = ?, price = ?, picture = ?, show_time = ?, show_date = ?
+        SET title = ?, language = ?, format = ?, price = ?, classic_price = ?, prime_price = ?, picture = ?, show_time = ?, show_date = ?
         WHERE id = ?
     `;
-    const values = [title, language, format, price, picture, show_time, show_date, movieId];
+    const values = [title, language, format, price, classic_price || 381.36, prime_price || 481.36, picture, show_time, show_date, movieId];
     pool.query(query, values, (err, result) => {
         if (err) {
             console.error('Error updating movie:', err);
@@ -905,7 +924,8 @@ app.get('/api/movies/:id/shows', (req, res) => {
 
 app.get('/api/shows/:id', (req, res) => {
     const id = parseInt(req.params.id, 10);
-    const sql = `SELECT s.*, m.title AS movie_title, m.language, sc.name AS screen_name, sc.row_count AS row_count, sc.col_count AS col_count
+    const sql = `SELECT s.*, m.title AS movie_title, m.language, m.classic_price, m.prime_price, m.picture, 
+                        sc.name AS screen_name, sc.row_count AS row_count, sc.col_count AS col_count
                  FROM shows s JOIN movies m ON m.id = s.movie_id JOIN screens sc ON sc.id = s.screen_id WHERE s.id = ?`;
     pool.query(sql, [id], (err, rows) => {
         if (err) return res.status(500).json({ error: 'Failed to fetch show' });
