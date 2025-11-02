@@ -49,7 +49,7 @@
   async function loadMovies(){
     const res = await fetch(`${API}/movies?all=1`);
     const movies = await res.json();
-    els.movieSelect.innerHTML = movies.map(m=>`<option value="${m.id}">${escapeHtml(m.name)} (${m.show_time})</option>`).join('');
+    els.movieSelect.innerHTML = movies.map(m=>`<option value="${m.id}">${escapeHtml(m.name)} - ${m.show_date} ${m.show_time}</option>`).join('');
   }
 
   async function loadSeats(movieId){

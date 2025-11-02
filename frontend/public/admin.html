@@ -533,6 +533,17 @@
             box-shadow: 0 6px 20px var(--shadow-hover);
         }
 
+        .btn-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+            transform: translateY(-2px);
+        }
+
         .btn-success:hover {
             background: #0d9668;
             transform: translateY(-2px);
@@ -608,13 +619,18 @@
 
         .movie-actions {
             display: flex;
-            gap: 0.75rem;
+            gap: 0.5rem;
             padding-top: 1rem;
             border-top: 1px solid var(--border);
+            flex-wrap: wrap;
         }
 
         .movie-actions .btn {
-            flex: 1;
+            flex: 1 1 auto;
+            min-width: 80px;
+            font-size: 0.8rem;
+            padding: 0.6rem 0.8rem;
+            white-space: nowrap;
         }
 
         /* Table Styles */
@@ -1010,12 +1026,13 @@
                 <!-- Add Movie Card -->
                 <div class="card">
                     <div class="card-header">
-                        <h2 class="card-title">
+                        <h2 class="card-title" id="movieFormTitle">
                             <i class="fas fa-plus-circle"></i>
                             Add New Movie
                         </h2>
                     </div>
                     <form id="addMovieForm">
+                        <input type="hidden" id="editMovieId" name="editMovieId" value="">
                         <div class="form-grid">
                             <div class="form-group">
                                 <label for="title">
@@ -1116,16 +1133,16 @@
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 1rem;">
-                            <button type="submit" class="btn btn-primary" id="addBtn">
-                                <i class="fas fa-plus"></i>
-                                Add Movie
-                            </button>
-                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('addMovieForm').reset()">
-                                <i class="fas fa-times"></i>
-                                Clear Form
-                            </button>
-                        </div>
+                                            <div style="display: flex; gap: 1rem;">
+                                                <button type="submit" class="btn btn-primary" id="movieSubmitBtn">
+                                                    <i class="fas fa-plus" id="movieSubmitIcon"></i>
+                                                    <span id="movieSubmitBtnText">Add Movie</span>
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" onclick="resetMovieForm()">
+                                                    <i class="fas fa-times"></i>
+                                                    Cancel
+                                                </button>
+                                            </div>
                     </form>
                 </div>
 
@@ -1234,18 +1251,32 @@
                 </div>
             </div>
 
-            <!-- Pricing Section - DEPRECATED: Now using per-movie pricing -->
-            <div id="pricing" class="section" style="display: none !important;">
+            <!-- Pricing Section -->
+            <div id="pricing" class="section">
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">
                             <i class="fas fa-money-bill-wave"></i>
-                            Seat Price Management (Global - Deprecated)
+                            Global Seat Price Management
                         </h2>
                     </div>
-                    <div class="alert alert-warning">
+                    <form id="priceFormGlobal" style="padding: 1rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                        <div class="form-group">
+                            <label for="globalClassicPrice"><i class="fas fa-chair"></i> Classic Seat Price (₹)</label>
+                            <input type="number" id="globalClassicPrice" min="0" step="0.01" placeholder="381.36" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="globalPrimePrice"><i class="fas fa-crown"></i> Prime Seat Price (₹)</label>
+                            <input type="number" id="globalPrimePrice" min="0" step="0.01" placeholder="481.36" required>
+                        </div>
+                        <div style="display:flex; gap: .75rem; align-items: end;">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Update Prices</button>
+                            <button type="button" class="btn btn-secondary" id="loadSamplePrices"><i class="fas fa-sync"></i> Load Sample</button>
+                        </div>
+                    </form>
+                    <div class="alert alert-info" style="margin: 0 1rem 1rem;">
                         <i class="fas fa-info-circle"></i>
-                        Global pricing has been replaced with per-movie pricing. Set Classic and Prime seat prices when adding or editing each movie.
+                        Updating here will apply Classic/Prime prices to all active movies instantly.
                     </div>
                 </div>
             </div>
@@ -1325,14 +1356,42 @@
         }
 
         // DOM Elements
-    const addMovieForm = document.getElementById('addMovieForm');
-    const addBtn = document.getElementById('addBtn');
+        const addMovieForm = document.getElementById('addMovieForm');
         const moviesContainer = document.getElementById('moviesContainer');
 
         // Load movies on page load and when movies section is active
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboardStats();
-            loadCurrentPrices();
+            // Wire global pricing form if present
+            const priceFormGlobal = document.getElementById('priceFormGlobal');
+            if (priceFormGlobal) {
+                priceFormGlobal.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const cp = parseFloat(document.getElementById('globalClassicPrice').value);
+                    const pp = parseFloat(document.getElementById('globalPrimePrice').value);
+                    if (!isFinite(cp) || !isFinite(pp) || cp < 0 || pp < 0) {
+                        showAlert('Please enter valid non-negative prices', 'error');
+                        return;
+                    }
+                    try {
+                        const res = await fetch(`${API_URL}/movies/prices`, {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ classic_price: cp, prime_price: pp })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.error || 'Update failed');
+                        showAlert(`Prices updated for ${data.updated} movies`, 'success');
+                        // Optionally refresh movies grid
+                        loadMovies();
+                    } catch (err) {
+                        showAlert('Failed to update prices: ' + err.message, 'error');
+                    }
+                });
+                const loadSampleBtn = document.getElementById('loadSamplePrices');
+                if (loadSampleBtn) loadSampleBtn.addEventListener('click', () => {
+                    document.getElementById('globalClassicPrice').value = '381.36';
+                    document.getElementById('globalPrimePrice').value = '481.36';
+                });
+            }
         });
 
         // ===== Screens & Shows Management =====
@@ -1525,6 +1584,9 @@
         addMovieForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
+                const editMovieId = document.getElementById('editMovieId').value;
+                const isEditMode = editMovieId !== '';
+            
             const formData = new FormData(addMovieForm);
 
             // Collect multi-select values
@@ -1551,11 +1613,15 @@
             };
 
             try {
-                addBtn.disabled = true;
-                addBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+                    const submitBtn = document.getElementById('movieSubmitBtn');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${isEditMode ? 'Updating...' : 'Adding...'}`;
 
-                const response = await fetch(`${API_URL}/movies`, {
-                    method: 'POST',
+                    const url = isEditMode ? `${API_URL}/movies/${editMovieId}` : `${API_URL}/movies`;
+                    const method = isEditMode ? 'PUT' : 'POST';
+                
+                    const response = await fetch(url, {
+                        method: method,
                     headers: {
                         'Content-Type': 'application/json',
                     },
@@ -1565,8 +1631,8 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    showAlert('Movie added successfully!', 'success');
-                    addMovieForm.reset();
+                        showAlert(isEditMode ? 'Movie updated successfully!' : 'Movie added successfully!', 'success');
+                        resetMovieForm();
                     loadMovies(); // Reload movies list
                     loadDashboardStats(); // Update stats
                 } else {
@@ -1575,8 +1641,13 @@
             } catch (error) {
                 showAlert(`Error: ${error.message}`, 'error');
             } finally {
-                addBtn.disabled = false;
-                addBtn.innerHTML = '<i class="fas fa-plus"></i> Add Movie';
+                    const submitBtn = document.getElementById('movieSubmitBtn');
+                    submitBtn.disabled = false;
+                    if (isEditMode) {
+                        submitBtn.innerHTML = '<i class="fas fa-save"></i> <span id="movieSubmitBtnText">Update Movie</span>';
+                    } else {
+                        submitBtn.innerHTML = '<i class="fas fa-plus" id="movieSubmitIcon"></i> <span id="movieSubmitBtnText">Add Movie</span>';
+                    }
             }
         });
 
@@ -1633,7 +1704,7 @@
                                 <button class="btn btn-danger btn-small" onclick="deleteMovie(${movie.id})">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
-                                <button class="btn btn-accent btn-small" onclick="manageSeats(${movie.id})">
+                                <button class="btn btn-info btn-small" onclick="manageSeats(${movie.id})">
                                     <i class="fas fa-chair"></i> Manage Seats
                                 </button>
                                 
@@ -1678,10 +1749,69 @@
             });
         }
 
-        // Edit movie (placeholder)
-        function editMovie(movieId) {
-            showAlert('Edit functionality coming soon!', 'error');
-        }
+            // Reset movie form to add mode
+            function resetMovieForm() {
+                const form = document.getElementById('addMovieForm');
+                form.reset();
+                const idEl = document.getElementById('editMovieId'); if (idEl) idEl.value = '';
+                const titleEl = document.getElementById('movieFormTitle'); if (titleEl) titleEl.innerHTML = '<i class="fas fa-plus-circle"></i> Add New Movie';
+                const btnTextEl = document.getElementById('movieSubmitBtnText'); if (btnTextEl) btnTextEl.textContent = 'Add Movie';
+                const iconEl = document.getElementById('movieSubmitIcon'); if (iconEl) iconEl.className = 'fas fa-plus';
+                // Scroll to form
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // Edit movie
+            async function editMovie(movieId) {
+                try {
+                    console.debug('Edit movie clicked', movieId);
+                    const response = await fetch(`${API_URL}/movies/${movieId}`);
+                    const movie = await response.json();
+                    if (!movie || movie.error) {
+                        showAlert(movie?.error || 'Movie not found!', 'error');
+                        return;
+                    }
+
+                    // Populate form with movie data
+                    const setVal = (id, val)=>{ const el = document.getElementById(id); if (el) el.value = val; };
+                    setVal('editMovieId', movie.id);
+                    setVal('title', movie.title || '');
+                    setVal('price', movie.price ?? '');
+                    setVal('classicSeatPrice', (movie.classic_price ?? 381.36));
+                    setVal('primeSeatPrice', (movie.prime_price ?? 481.36));
+                    setVal('date', movie.show_date || '');
+                    setVal('showtime', movie.show_time || '');
+                    setVal('description', movie.description || '');
+                    setVal('picture', movie.picture || '');
+
+                    // Set multi-select values for language
+                    const languageSelect = document.getElementById('language');
+                    const languages = String(movie.language || '').split(',').map(l => l.trim()).filter(Boolean);
+                    Array.from(languageSelect.options).forEach(option => {
+                        option.selected = languages.includes(option.value);
+                    });
+
+                    // Set multi-select values for format
+                    const formatSelect = document.getElementById('format');
+                    const formats = String(movie.format || '').split(',').map(f => f.trim()).filter(Boolean);
+                    Array.from(formatSelect.options).forEach(option => {
+                        option.selected = formats.includes(option.value);
+                    });
+
+                    // Update form UI to edit mode
+                    const titleEl2 = document.getElementById('movieFormTitle'); if (titleEl2) titleEl2.innerHTML = '<i class="fas fa-edit"></i> Edit Movie';
+                    const btnTextEl2 = document.getElementById('movieSubmitBtnText'); if (btnTextEl2) btnTextEl2.textContent = 'Update Movie';
+                    const iconEl2 = document.getElementById('movieSubmitIcon'); if (iconEl2) iconEl2.className = 'fas fa-save';
+
+                    // Scroll to form
+                    document.getElementById('addMovieForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                
+                    showAlert('Movie loaded for editing', 'success');
+                } catch (error) {
+                    console.error('Edit movie failed', error);
+                    showAlert('Error loading movie: ' + error.message, 'error');
+                }
+            }
 
         // Delete movie
         async function deleteMovie(movieId) {
@@ -1936,45 +2066,43 @@
             }, 5000);
         }
 
-        // Price Management
+        // Price Management (Deprecated) - guard against missing elements
+        // Kept for backward compatibility; UI removed.
         const priceForm = document.getElementById('priceForm');
-
-        // Load current prices from localStorage
-        function loadCurrentPrices() {
-            const classicPrice = localStorage.getItem('classicPrice') || '381.36';
-            const primePrice = localStorage.getItem('primePrice') || '481.36';
-            
-            document.getElementById('classicPrice').value = classicPrice;
-            document.getElementById('primePrice').value = primePrice;
+        function loadCurrentPrices() {}
+        if (priceForm) {
+            function loadCurrentPrices() {
+                const classicPrice = localStorage.getItem('classicPrice') || '381.36';
+                const primePrice = localStorage.getItem('primePrice') || '481.36';
+                const classicEl = document.getElementById('classicPrice');
+                const primeEl = document.getElementById('primePrice');
+                if (classicEl) classicEl.value = classicPrice;
+                if (primeEl) primeEl.value = primePrice;
+            }
+            priceForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const classicEl = document.getElementById('classicPrice');
+                const primeEl = document.getElementById('primePrice');
+                if (!classicEl || !primeEl) return;
+                const classicPrice = parseFloat(classicEl.value);
+                const primePrice = parseFloat(primeEl.value);
+                if (isNaN(classicPrice) || isNaN(primePrice)) {
+                    showAlert('Please enter valid prices', 'error');
+                    return;
+                }
+                if (classicPrice < 0 || primePrice < 0) {
+                    showAlert('Prices cannot be negative', 'error');
+                    return;
+                }
+                try {
+                    localStorage.setItem('classicPrice', classicPrice.toString());
+                    localStorage.setItem('primePrice', primePrice.toString());
+                    showAlert('Seat prices updated successfully!', 'success');
+                } catch (error) {
+                    showAlert(`Error: ${error.message}`, 'error');
+                }
+            });
         }
-
-        // Handle price form submission
-        priceForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const classicPrice = parseFloat(document.getElementById('classicPrice').value);
-            const primePrice = parseFloat(document.getElementById('primePrice').value);
-            
-            if (isNaN(classicPrice) || isNaN(primePrice)) {
-                showAlert('Please enter valid prices', 'error');
-                return;
-            }
-            
-            if (classicPrice < 0 || primePrice < 0) {
-                showAlert('Prices cannot be negative', 'error');
-                return;
-            }
-            
-            try {
-                // Save to localStorage
-                localStorage.setItem('classicPrice', classicPrice.toString());
-                localStorage.setItem('primePrice', primePrice.toString());
-                
-                showAlert('Seat prices updated successfully!', 'success');
-            } catch (error) {
-                showAlert(`Error: ${error.message}`, 'error');
-            }
-        });
     </script>
 </body>
 </html>
