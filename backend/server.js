@@ -376,6 +376,24 @@ app.get('/api/movies', (req, res) => {
     });
 });
 
+// Update classic/prime prices globally for all active movies
+app.post('/api/movies/prices', (req, res) => {
+    const { classic_price, prime_price } = req.body || {};
+    const cp = parseFloat(classic_price);
+    const pp = parseFloat(prime_price);
+    if (!isFinite(cp) || !isFinite(pp) || cp < 0 || pp < 0) {
+        return res.status(400).json({ error: 'Invalid classic or prime price' });
+    }
+    const sql = 'UPDATE movies SET classic_price = ?, prime_price = ? WHERE is_active = 1';
+    pool.query(sql, [cp, pp], (err, result) => {
+        if (err) {
+            console.error('Error updating global prices:', err);
+            return res.status(500).json({ error: 'Failed to update prices' });
+        }
+        res.json({ success: true, updated: result.affectedRows });
+    });
+});
+
 // ===== AUTH ROUTES =====
 function sanitizeEmail(s){ return String(s||'').trim().toLowerCase(); }
 
@@ -627,12 +645,14 @@ app.get('/api/movies/:id', (req, res) => {
             id: movie.id,
             name: movie.title,
             title: movie.title,
-            show_date: new Date().toISOString().split('T')[0], // Default to today
+            show_date: movie.show_date,
             show_time: movie.show_time,
             showtime: movie.show_time, // Keep for frontend compatibility
             language: movie.language,
             format: movie.format,
             price: parseFloat(movie.price),
+            classic_price: movie.classic_price !== undefined ? parseFloat(movie.classic_price) : 381.36,
+            prime_price: movie.prime_price !== undefined ? parseFloat(movie.prime_price) : 481.36,
             picture: movie.picture
         });
     });
